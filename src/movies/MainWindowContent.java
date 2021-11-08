@@ -6,6 +6,12 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import javax.swing.*;
 import javax.swing.border.*;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.general.DefaultPieDataset;
+
 import java.sql.*;
 
 @SuppressWarnings("serial")
@@ -22,20 +28,22 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 
 	private JPanel detailsPanel;
 	private JPanel exportButtonPanel;
+	private JPanel chartsPanel;
+	private JPanel statusPanel;
 	//private JPanel exportConceptDataPanel;
 	private JScrollPane dbContentsPanel;
 
 	private Border lineBorder;
 
 	private JLabel IDLabel=new JLabel("ID:                 ");
-	private JLabel titleLabel=new JLabel("FirstName:               ");
-	private JLabel genreLabel=new JLabel("LastName:      ");
-	private JLabel yearLabel=new JLabel("Age:        ");
-	private JLabel lengthLabel=new JLabel("Gender:                 ");
-	private JLabel directorLabel=new JLabel("Position:               ");
-	private JLabel statusLabel=new JLabel("Department:      ");
-	private JLabel ratingLabel=new JLabel("Rate:      ");
-	private JLabel ageRestrictionLabel=new JLabel("Hours:        ");
+	private JLabel titleLabel=new JLabel("Title:               ");
+	private JLabel genreLabel=new JLabel("Genre:      ");
+	private JLabel yearLabel=new JLabel("Year:        ");
+	private JLabel lengthLabel=new JLabel("Length:                 ");
+	private JLabel directorLabel=new JLabel("Director:               ");
+	private JLabel statusLabel=new JLabel("Status:      ");
+	private JLabel ratingLabel=new JLabel("Rating:      ");
+	private JLabel ageRestrictionLabel=new JLabel("Age Restriction:        ");
 
 	private JTextField IDTF= new JTextField(10);
 	private JTextField titleTF=new JTextField(10);
@@ -58,15 +66,21 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 	private JButton exportButton  = new JButton("Export");
 	private JButton deleteButton  = new JButton("Delete");
 	private JButton clearButton  = new JButton("Clear");
-
-	private JButton  NumLectures = new JButton("NumLecturesForDepartment:");
-	private JTextField NumLecturesTF  = new JTextField(12);
-	private JButton avgAgeDepartment  = new JButton("AvgAgeForDepartment");
-	private JTextField avgAgeDepartmentTF  = new JTextField(12);
-	private JButton ListAllDepartments  = new JButton("ListAllDepartments");
-	private JButton ListAllPositions  = new JButton("ListAllPositions");
-
-
+	private JButton genreChartButton = new JButton("Genre Chart");
+	private JButton ratingChartButton = new JButton("Rating Chart");
+	private JButton watchChartButton = new JButton("Watch Chart");
+	private JButton ageChartButton = new JButton("Age Restriction Chart");
+	
+	private JButton numMovies = new JButton("NumMoviesForGenre:");
+	private JTextField numMoviesTF = new JTextField(12);
+	private JButton avgRatingGenre = new JButton("AvgRatingForGenre:");
+	private JTextField avgRatingGenreTF  = new JTextField(12);
+	private JButton ListAllWatched  = new JButton("ListAllWatched");
+	private JButton ListAllUnwatched  = new JButton("ListAllUnwatched");
+	
+	private JLabel movieIdInput = new JLabel("Enter ID of the movie you watched: ");
+	private JButton updateMovieStatus = new JButton("Update Status");
+	private JTextField updateMovieStatusTF = new JTextField(12);
 
 	public MainWindowContent( String aTitle)
 	{	
@@ -111,15 +125,28 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 		exportButtonPanel.setLayout(new GridLayout(3,2));
 		exportButtonPanel.setBackground(Color.lightGray);
 		exportButtonPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Export Data"));
-		exportButtonPanel.add(NumLectures);
-		exportButtonPanel.add(NumLecturesTF);
-		exportButtonPanel.add(avgAgeDepartment);
-		exportButtonPanel.add(avgAgeDepartmentTF);
-		exportButtonPanel.add(ListAllDepartments);
-		exportButtonPanel.add(ListAllPositions);
+		exportButtonPanel.add(numMovies);
+		exportButtonPanel.add(numMoviesTF);
+		exportButtonPanel.add(avgRatingGenre);
+		exportButtonPanel.add(avgRatingGenreTF);
+		exportButtonPanel.add(ListAllWatched);
+		exportButtonPanel.add(ListAllUnwatched);
+		
 		exportButtonPanel.setSize(500, 200);
 		exportButtonPanel.setLocation(3, 300);
 		content.add(exportButtonPanel);
+		
+		chartsPanel=new JPanel();
+		chartsPanel.setLayout(new GridLayout(4,2));
+		chartsPanel.setBackground(Color.lightGray);
+		chartsPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Chart Data"));
+		chartsPanel.setSize(400, 200);
+		chartsPanel.setLocation(550, 300);
+		chartsPanel.add(genreChartButton);
+		chartsPanel.add(ratingChartButton);
+		chartsPanel.add(watchChartButton);
+		chartsPanel.add(ageChartButton);
+		content.add(chartsPanel);
 
 		insertButton.setSize(100, 30);
 		updateButton.setSize(100, 30);
@@ -139,16 +166,21 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 		deleteButton.addActionListener(this);
 		clearButton.addActionListener(this);
 
-		this.ListAllDepartments.addActionListener(this);
-		this.NumLectures.addActionListener(this);
-
+		this.numMovies.addActionListener(this);
+		this.avgRatingGenre.addActionListener(this);
+		this.ListAllWatched.addActionListener(this);
+		this.ListAllUnwatched.addActionListener(this);
+		this.genreChartButton.addActionListener(this);
+		this.ratingChartButton.addActionListener(this);
+		this.watchChartButton.addActionListener(this);
+		this.ageChartButton.addActionListener(this);
 
 		content.add(insertButton);
 		content.add(updateButton);
 		content.add(exportButton);
 		content.add(deleteButton);
 		content.add(clearButton);
-
+	
 
 		TableofDBContents.setPreferredScrollableViewportSize(new Dimension(900, 300));
 
@@ -188,11 +220,39 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 			System.out.println("Error: Failed to connect to database\n"+e.getMessage());
 		}
 	}
+	public  void pieGraph(ResultSet rs, String title) {
+		try {
+			DefaultPieDataset dataset = new DefaultPieDataset();
 
+			while (rs.next()) {
+				String category = rs.getString(1);
+				String value = rs.getString(2);
+				dataset.setValue(category+ " "+value, new Double(value));
+			}
+			JFreeChart chart = ChartFactory.createPieChart(
+					title,  
+					dataset,             
+					false,              
+					true,
+					true
+			);
+
+			ChartFrame frame = new ChartFrame(title, chart);
+			chart.setBackgroundPaint(Color.WHITE);
+			frame.pack();
+			frame.setVisible(true);
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	//event handling 
 	public void actionPerformed(ActionEvent e)
 	{
 		Object target=e.getSource();
+		ResultSet rs=null;
+		String cmd = null;
+		
 		if (target == clearButton)
 		{
 			IDTF.setText("");
@@ -250,14 +310,14 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 			try
 			{ 			
 				String updateTemp ="UPDATE movies SET " +
-				"firstName = '"+titleTF.getText()+
-				"', lastName = '"+genreTF.getText()+
-				"', age = "+yearTF.getText()+
-				", gender ='"+lengthTF.getText()+
-				"', position = '"+directorTF.getText()+
-				"', department = '"+statusTF.getText()+
-				"', rate = "+ratingTF.getText()+
-				", hours = "+ageRestrictionTF.getText()+
+				"title = '"+titleTF.getText()+
+				"', genre = '"+genreTF.getText()+
+				"', year = "+yearTF.getText()+
+				", length ='"+lengthTF.getText()+
+				"', director = '"+directorTF.getText()+
+				"', status = '"+statusTF.getText()+
+				"', rating = "+ratingTF.getText()+
+				", age_restriction = "+ageRestrictionTF.getText()+
 				" where id = "+IDTF.getText();
 
 
@@ -279,9 +339,33 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 		//I have only added functionality of 2 of the button on the lower right of the template
 		///////////////////////////////////////////////////////////////////////////////////
 
-		if(target == this.ListAllDepartments){
+		if(target == this.numMovies){
+			String genreName = this.numMoviesTF.getText();
 
-			cmd = "select distinct department from details;";
+			cmd = "SELECT genre, COUNT(*) "+  "FROM movies " + "WHERE genre = '"  +genreName+"';";
+
+			System.out.println(cmd);
+			try{					
+				rs= stmt.executeQuery(cmd); 	
+				writeToFile(rs);
+			}
+			catch(Exception e1){e1.printStackTrace();}
+
+		}
+		if(target == this.avgRatingGenre){
+
+			cmd = "SELECT avg(rating) FROM movies where genre = '"+ this.avgRatingGenreTF.getText() +"';";
+			System.out.println(cmd);
+			try{					
+				rs= stmt.executeQuery(cmd); 	
+				writeToFile(rs);
+			}
+			catch(Exception e1){e1.printStackTrace();}
+
+		}
+		if(target == this.ListAllWatched){
+
+			cmd = "SELECT title FROM movies WHERE status = 'Watched';";
 
 			try{					
 				rs= stmt.executeQuery(cmd); 	
@@ -291,11 +375,9 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 
 		}
 
-		if(target == this.NumLectures){
-			String deptName = this.NumLecturesTF.getText();
+		if(target == this.ListAllUnwatched){
 
-			cmd = "select department, count(*) "+  "from details " + "where department = '"  +deptName+"';";
-
+			cmd = "SELECT title FROM movies WHERE status = 'Unwatched';";
 			System.out.println(cmd);
 			try{					
 				rs= stmt.executeQuery(cmd); 	
@@ -303,7 +385,48 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 			}
 			catch(Exception e1){e1.printStackTrace();}
 
-		} 
+		}
+		// chart buttons
+		if (target == genreChartButton)
+		{
+			cmd = "SELECT genre, COUNT(*) FROM movies GROUP BY genre;";
+			try {
+				rs= stmt.executeQuery(cmd);
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			} 
+			pieGraph(rs, "Genre");	
+		}
+		
+		if (target == ratingChartButton)
+		{
+			cmd = "SELECT rating, COUNT(*) FROM movies GROUP BY rating;";
+			try {
+				rs= stmt.executeQuery(cmd);
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			} 
+			pieGraph(rs, "Rating");	
+		}
+		if (target == watchChartButton)
+		{
+			cmd = "SELECT status, COUNT(*) FROM movies GROUP BY status;";
+			try {
+				rs= stmt.executeQuery(cmd);
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			} 
+			pieGraph(rs, "Watched");	
+		}
+		if (target == ageChartButton) {
+			cmd = "SELECT age_restriction, COUNT(*) FROM movies GROUP BY age_restriction;";
+			try {
+				rs= stmt.executeQuery(cmd);
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			} 
+			pieGraph(rs, "Age Restrictions");
+		}
 
 	}
 	///////////////////////////////////////////////////////////////////////////
@@ -311,7 +434,7 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 	private void writeToFile(ResultSet rs){
 		try{
 			System.out.println("In writeToFile");
-			FileWriter outputFile = new FileWriter("Sheila.csv");
+			FileWriter outputFile = new FileWriter("Birce.csv");
 			PrintWriter printWriter = new PrintWriter(outputFile);
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int numColumns = rsmd.getColumnCount();
