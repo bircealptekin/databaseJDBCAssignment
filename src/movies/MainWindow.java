@@ -7,12 +7,10 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
-public class MainWindow extends JFrame implements ActionListener
-	{
+public class MainWindow extends JFrame implements ActionListener {
 		private JMenuItem exitItem;
 
-		public MainWindow()
-		{
+		public MainWindow() {
 			// Sets the Window Title
 			super( "JDBC Assignment" ); 
 			
@@ -38,8 +36,7 @@ public class MainWindow extends JFrame implements ActionListener
 		}
 		
 		// The event handling for the main frame
-		public void actionPerformed(ActionEvent e)
-		{
+		public void actionPerformed(ActionEvent e) {
 			if(e.getSource().equals(exitItem)){
 				this.dispose();
 			}

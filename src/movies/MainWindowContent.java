@@ -15,8 +15,7 @@ import org.jfree.data.general.DefaultPieDataset;
 import java.sql.*;
 
 @SuppressWarnings("serial")
-public class MainWindowContent extends JInternalFrame implements ActionListener
-{	
+public class MainWindowContent extends JInternalFrame implements ActionListener {	
 	String cmd = null;
 
 	// DB Connectivity Attributes
@@ -82,8 +81,7 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 	private JButton updateMovieStatus = new JButton("Update Status");
 	private JTextField updateMovieStatusTF = new JTextField(12);
 
-	public MainWindowContent( String aTitle)
-	{	
+	public MainWindowContent(String aTitle) {	
 		//setting up the GUI
 		super(aTitle, false,false,false,false);
 		setEnabled(true);
@@ -140,13 +138,24 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 		chartsPanel.setLayout(new GridLayout(4,2));
 		chartsPanel.setBackground(Color.lightGray);
 		chartsPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Chart Data"));
-		chartsPanel.setSize(400, 200);
+		chartsPanel.setSize(300, 200);
 		chartsPanel.setLocation(550, 300);
 		chartsPanel.add(genreChartButton);
 		chartsPanel.add(ratingChartButton);
 		chartsPanel.add(watchChartButton);
 		chartsPanel.add(ageChartButton);
 		content.add(chartsPanel);
+		
+		statusPanel = new JPanel();
+		statusPanel.setLayout(new GridLayout(3,1));
+		statusPanel.setBackground(Color.lightGray);
+		statusPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Update Status"));
+		statusPanel.setSize(250, 200);
+		statusPanel.setLocation(900, 300);
+		statusPanel.add(movieIdInput);
+		statusPanel.add(updateMovieStatusTF);
+		statusPanel.add(updateMovieStatus);
+		content.add(statusPanel);
 
 		insertButton.setSize(100, 30);
 		updateButton.setSize(100, 30);
@@ -174,6 +183,7 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 		this.ratingChartButton.addActionListener(this);
 		this.watchChartButton.addActionListener(this);
 		this.ageChartButton.addActionListener(this);
+		this.updateMovieStatus.addActionListener(this);
 
 		content.add(insertButton);
 		content.add(updateButton);
@@ -196,27 +206,24 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 		content.add(detailsPanel);
 		content.add(dbContentsPanel);
 
-		setSize(982,645);
+		setSize(1200,645);
 		setVisible(true);
 
 		TableModel.refreshFromDB(stmt);
 	}
 
-	public void initiate_db_conn()
-	{
-		try
-		{
+	public void initiate_db_conn() {
+		try {
 			// Load the JConnector Driver
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			// Specify the DB Name
 			String url="jdbc:mysql://localhost:3306/assignment";
-			// Connect to DB using DB URL, Username and password
+			// Connect to DB using DB URL, username and password
 			con = DriverManager.getConnection(url, "root", "12345");
 			//Create a generic statement which is passed to the TestInternalFrame1
 			stmt = con.createStatement();
 		}
-		catch(Exception e)
-		{
+		catch(Exception e) {
 			System.out.println("Error: Failed to connect to database\n"+e.getMessage());
 		}
 	}
@@ -246,15 +253,14 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 			e.printStackTrace();
 		}
 	}
+	
 	//event handling 
-	public void actionPerformed(ActionEvent e)
-	{
+	public void actionPerformed(ActionEvent e) {
 		Object target=e.getSource();
 		ResultSet rs=null;
-		String cmd = null;
+		String query = null;
 		
-		if (target == clearButton)
-		{
+		if (target == clearButton) {
 			IDTF.setText("");
 			titleTF.setText("");
 			genreTF.setText("");
@@ -267,10 +273,8 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 
 		}
 
-		if (target == insertButton)
-		{		 
-			try
-			{
+		if (target == insertButton) {		 
+			try {
 				String updateTemp ="INSERT INTO movies VALUES("+
 				null +",'"+titleTF.getText()+"','"+genreTF.getText()+"',"+yearTF.getText()+",'"+lengthTF.getText()+"','"
 				+directorTF.getText()+"','"+statusTF.getText()+"',"+ratingTF.getText()+","+ageRestrictionTF.getText()+");";
@@ -278,37 +282,30 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 				stmt.executeUpdate(updateTemp);
 
 			}
-			catch (SQLException sqle)
-			{
+			catch (SQLException sqle) {
 				System.err.println("Error with  insert:\n"+sqle.toString());
 			}
-			finally
-			{
+			finally {
 				TableModel.refreshFromDB(stmt);
 			}
 		}
-		if (target == deleteButton)
-		{
-
-			try
-			{
+		
+		if (target == deleteButton) {
+			try {
 				String updateTemp ="DELETE FROM movies WHERE id = "+IDTF.getText()+";"; 
 				stmt.executeUpdate(updateTemp);
 
 			}
-			catch (SQLException sqle)
-			{
+			catch (SQLException sqle) {
 				System.err.println("Error with delete:\n"+sqle.toString());
 			}
-			finally
-			{
+			finally {
 				TableModel.refreshFromDB(stmt);
 			}
 		}
-		if (target == updateButton)
-		{	 	
-			try
-			{ 			
+		
+		if (target == updateButton) {	 	
+			try { 			
 				String updateTemp ="UPDATE movies SET " +
 				"title = '"+titleTF.getText()+
 				"', genre = '"+genreTF.getText()+
@@ -327,72 +324,68 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 				rs.next();
 				rs.close();	
 			}
-			catch (SQLException sqle){
+			catch (SQLException sqle) {
 				System.err.println("Error with  update:\n"+sqle.toString());
 			}
-			finally{
+			finally {
 				TableModel.refreshFromDB(stmt);
 			}
 		}
 
-		/////////////////////////////////////////////////////////////////////////////////////
-		//I have only added functionality of 2 of the button on the lower right of the template
-		///////////////////////////////////////////////////////////////////////////////////
-
-		if(target == this.numMovies){
+		if(target == this.numMovies) {
 			String genreName = this.numMoviesTF.getText();
 
-			cmd = "SELECT genre, COUNT(*) "+  "FROM movies " + "WHERE genre = '"  +genreName+"';";
+			query = "SELECT genre, COUNT(*) "+  "FROM movies " + "WHERE genre = '"  +genreName+"';";
 
-			System.out.println(cmd);
-			try{					
-				rs= stmt.executeQuery(cmd); 	
+			System.out.println(query);
+			try {					
+				rs= stmt.executeQuery(query); 	
 				writeToFile(rs);
 			}
 			catch(Exception e1){e1.printStackTrace();}
 
 		}
-		if(target == this.avgRatingGenre){
-
-			cmd = "SELECT avg(rating) FROM movies where genre = '"+ this.avgRatingGenreTF.getText() +"';";
-			System.out.println(cmd);
-			try{					
-				rs= stmt.executeQuery(cmd); 	
+		
+		if(target == this.avgRatingGenre) {
+			query = "SELECT avg(rating) FROM movies where genre = '"+ this.avgRatingGenreTF.getText() +"';";
+			System.out.println(query);
+			try {					
+				rs= stmt.executeQuery(query); 	
 				writeToFile(rs);
 			}
-			catch(Exception e1){e1.printStackTrace();}
+			catch(Exception e1)	{ e1.printStackTrace(); }
 
 		}
-		if(target == this.ListAllWatched){
-
-			cmd = "SELECT title FROM movies WHERE status = 'Watched';";
-
-			try{					
-				rs= stmt.executeQuery(cmd); 	
+		
+		if(target == this.ListAllWatched) {
+			query = "SELECT title FROM movies WHERE status = 'Watched';";
+			try {					
+				rs= stmt.executeQuery(query); 	
 				writeToFile(rs);
 			}
-			catch(Exception e1){e1.printStackTrace();}
+			catch(Exception e1)	{ e1.printStackTrace(); }
 
 		}
 
-		if(target == this.ListAllUnwatched){
-
-			cmd = "SELECT title FROM movies WHERE status = 'Unwatched';";
-			System.out.println(cmd);
-			try{					
-				rs= stmt.executeQuery(cmd); 	
+		if(target == this.ListAllUnwatched) {
+			query = "SELECT title FROM movies WHERE status = 'Unwatched';";
+			System.out.println(query);
+			try {					
+				rs= stmt.executeQuery(query); 	
 				writeToFile(rs);
 			}
-			catch(Exception e1){e1.printStackTrace();}
+			catch(Exception e1)	{ e1.printStackTrace(); }
 
 		}
+		
 		// chart buttons
 		if (target == genreChartButton)
 		{
-			cmd = "SELECT genre, COUNT(*) FROM movies GROUP BY genre;";
+			query = "SELECT genre, COUNT(*) FROM movies GROUP BY genre;";
 			try {
-				rs= stmt.executeQuery(cmd);
-			} catch (SQLException e1) {
+				rs= stmt.executeQuery(query);
+			} 
+			catch (SQLException e1) {
 				e1.printStackTrace();
 			} 
 			pieGraph(rs, "Genre");	
@@ -400,35 +393,57 @@ public class MainWindowContent extends JInternalFrame implements ActionListener
 		
 		if (target == ratingChartButton)
 		{
-			cmd = "SELECT rating, COUNT(*) FROM movies GROUP BY rating;";
+			query = "SELECT rating, COUNT(*) FROM movies GROUP BY rating;";
 			try {
-				rs= stmt.executeQuery(cmd);
-			} catch (SQLException e1) {
+				rs= stmt.executeQuery(query);
+			}
+			catch (SQLException e1) {
 				e1.printStackTrace();
 			} 
 			pieGraph(rs, "Rating");	
 		}
-		if (target == watchChartButton)
-		{
-			cmd = "SELECT status, COUNT(*) FROM movies GROUP BY status;";
+		
+		if (target == watchChartButton) {
+			query = "SELECT status, COUNT(*) FROM movies GROUP BY status;";
 			try {
-				rs= stmt.executeQuery(cmd);
-			} catch (SQLException e1) {
+				rs= stmt.executeQuery(query);
+			}
+			catch (SQLException e1) {
 				e1.printStackTrace();
 			} 
 			pieGraph(rs, "Watched");	
 		}
+		
 		if (target == ageChartButton) {
-			cmd = "SELECT age_restriction, COUNT(*) FROM movies GROUP BY age_restriction;";
+			query = "SELECT age_restriction, COUNT(*) FROM movies GROUP BY age_restriction;";
 			try {
-				rs= stmt.executeQuery(cmd);
-			} catch (SQLException e1) {
+				rs= stmt.executeQuery(query);
+			}
+			catch (SQLException e1) {
 				e1.printStackTrace();
 			} 
 			pieGraph(rs, "Age Restrictions");
 		}
+		
+		// stored procedure
+		if(target == updateMovieStatus) {
+			int movieID = Integer.parseInt(this.updateMovieStatusTF.getText());
+			query = "call update_status(" + movieID + ");";
+			try {
+				stmt.executeUpdate(query);
+			}
+			catch (SQLException sqle)
+			{
+				System.err.println("Error with update:\n"+sqle.toString());
+			}
+			finally
+			{
+				TableModel.refreshFromDB(stmt);
+			}
+		}
 
 	}
+	
 	///////////////////////////////////////////////////////////////////////////
 
 	private void writeToFile(ResultSet rs){
