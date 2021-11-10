@@ -29,6 +29,8 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 	private JPanel exportButtonPanel;
 	private JPanel chartsPanel;
 	private JPanel statusPanel;
+	private JPanel ratingPanel;
+	private JPanel placeHolder;
 	//private JPanel exportConceptDataPanel;
 	private JScrollPane dbContentsPanel;
 
@@ -77,9 +79,16 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 	private JButton ListAllWatched  = new JButton("ListAllWatched");
 	private JButton ListAllUnwatched  = new JButton("ListAllUnwatched");
 	
-	private JLabel movieIdInput = new JLabel("Enter ID of the movie you watched: ");
+	private JLabel movieIdInput = new JLabel("ID of the movie you watched: ");
 	private JButton updateMovieStatus = new JButton("Update Status");
 	private JTextField updateMovieStatusTF = new JTextField(12);
+	
+	private JLabel movieIdInput2 = new JLabel("ID of the movie: ");
+	private JTextField updateMovieRatingTF = new JTextField(12);
+	private JLabel newMovieRating = new JLabel("New rating: ");	
+	private JTextField newMovieRatingTF = new JTextField(12);
+	private JButton updateMovieRatingButton = new JButton("Update Rating");
+	
 
 	public MainWindowContent(String aTitle) {	
 		//setting up the GUI
@@ -130,7 +139,7 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 		exportButtonPanel.add(ListAllWatched);
 		exportButtonPanel.add(ListAllUnwatched);
 		
-		exportButtonPanel.setSize(500, 200);
+		exportButtonPanel.setSize(380, 200);
 		exportButtonPanel.setLocation(3, 300);
 		content.add(exportButtonPanel);
 		
@@ -138,8 +147,8 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 		chartsPanel.setLayout(new GridLayout(4,2));
 		chartsPanel.setBackground(Color.lightGray);
 		chartsPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Chart Data"));
-		chartsPanel.setSize(300, 200);
-		chartsPanel.setLocation(550, 300);
+		chartsPanel.setSize(250, 200);
+		chartsPanel.setLocation(395, 300);
 		chartsPanel.add(genreChartButton);
 		chartsPanel.add(ratingChartButton);
 		chartsPanel.add(watchChartButton);
@@ -151,11 +160,29 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 		statusPanel.setBackground(Color.lightGray);
 		statusPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Update Status"));
 		statusPanel.setSize(250, 200);
-		statusPanel.setLocation(900, 300);
+		statusPanel.setLocation(657, 300);
 		statusPanel.add(movieIdInput);
 		statusPanel.add(updateMovieStatusTF);
 		statusPanel.add(updateMovieStatus);
 		content.add(statusPanel);
+		
+		placeHolder = new JPanel();
+		placeHolder.setBackground(Color.lightGray);
+		placeHolder.setSize(125, 100);
+		
+		ratingPanel = new JPanel();
+		ratingPanel.setLayout(new GridLayout(3,2));
+		ratingPanel.setBackground(Color.lightGray);
+		ratingPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Update Rating"));
+		ratingPanel.setSize(250, 200);
+		ratingPanel.setLocation(919, 300);
+		ratingPanel.add(movieIdInput2);
+		ratingPanel.add(updateMovieRatingTF);
+		ratingPanel.add(newMovieRating);
+		ratingPanel.add(newMovieRatingTF);
+		ratingPanel.add(placeHolder);
+		ratingPanel.add(updateMovieRatingButton);
+		content.add(ratingPanel);
 
 		insertButton.setSize(100, 30);
 		updateButton.setSize(100, 30);
@@ -184,6 +211,7 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 		this.watchChartButton.addActionListener(this);
 		this.ageChartButton.addActionListener(this);
 		this.updateMovieStatus.addActionListener(this);
+		this.updateMovieRatingButton.addActionListener(this);
 
 		content.add(insertButton);
 		content.add(updateButton);
@@ -429,6 +457,23 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 		if(target == updateMovieStatus) {
 			int movieID = Integer.parseInt(this.updateMovieStatusTF.getText());
 			query = "call update_status(" + movieID + ");";
+			try {
+				stmt.executeUpdate(query);
+			}
+			catch (SQLException sqle)
+			{
+				System.err.println("Error with update:\n"+sqle.toString());
+			}
+			finally
+			{
+				TableModel.refreshFromDB(stmt);
+			}
+		}
+		
+		if(target == updateMovieRatingButton) {
+			int movieID = Integer.parseInt(this.updateMovieRatingTF.getText());
+			float newRating = Float.parseFloat(this.newMovieRatingTF.getText());
+			query = "call update_rating(" + movieID + ", " + newRating + ");";
 			try {
 				stmt.executeUpdate(query);
 			}
