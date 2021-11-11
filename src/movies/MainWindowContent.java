@@ -359,6 +359,15 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 				TableModel.refreshFromDB(stmt);
 			}
 		}
+		
+		if(target == this.exportButton) {
+			query = "SELECT * FROM movies";
+			try {
+				rs = stmt.executeQuery(query);
+				writeToFileExport(rs);
+			}
+			catch(Exception e1){e1.printStackTrace();}
+		}
 
 		if(target == this.numMovies) {
 			String genreName = this.numMoviesTF.getText();
@@ -368,18 +377,18 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 			System.out.println(query);
 			try {					
 				rs= stmt.executeQuery(query); 	
-				writeToFile(rs);
+				writeToFileNumMovies(rs);
 			}
 			catch(Exception e1){e1.printStackTrace();}
 
 		}
 		
 		if(target == this.avgRatingGenre) {
-			query = "SELECT avg(rating) FROM movies where genre = '"+ this.avgRatingGenreTF.getText() +"';";
+			query = "SELECT genre, avg(rating) FROM movies where genre = '"+ this.avgRatingGenreTF.getText() +"';";
 			System.out.println(query);
 			try {					
 				rs= stmt.executeQuery(query); 	
-				writeToFile(rs);
+				writeToFileAvgRating(rs);
 			}
 			catch(Exception e1)	{ e1.printStackTrace(); }
 
@@ -389,7 +398,7 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 			query = "SELECT title FROM movies WHERE status = 'Watched';";
 			try {					
 				rs= stmt.executeQuery(query); 	
-				writeToFile(rs);
+				writeToFileWatched(rs);
 			}
 			catch(Exception e1)	{ e1.printStackTrace(); }
 
@@ -400,7 +409,7 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 			System.out.println(query);
 			try {					
 				rs= stmt.executeQuery(query); 	
-				writeToFile(rs);
+				writeToFileUnwatched(rs);
 			}
 			catch(Exception e1)	{ e1.printStackTrace(); }
 
@@ -491,10 +500,10 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 	
 	///////////////////////////////////////////////////////////////////////////
 
-	private void writeToFile(ResultSet rs){
+	private void writeToFileExport(ResultSet rs){
 		try{
 			System.out.println("In writeToFile");
-			FileWriter outputFile = new FileWriter("Birce.csv");
+			FileWriter outputFile = new FileWriter("export.csv");
 			PrintWriter printWriter = new PrintWriter(outputFile);
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int numColumns = rsmd.getColumnCount();
@@ -514,4 +523,101 @@ public class MainWindowContent extends JInternalFrame implements ActionListener 
 		}
 		catch(Exception e){e.printStackTrace();}
 	}
+	
+	private void writeToFileNumMovies(ResultSet rs){
+		try{
+			System.out.println("In writeToFile");
+			FileWriter outputFile = new FileWriter("numMovies.csv");
+			PrintWriter printWriter = new PrintWriter(outputFile);
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int numColumns = rsmd.getColumnCount();
+
+			for(int i=0;i<numColumns;i++){
+				printWriter.print(rsmd.getColumnLabel(i+1)+",");
+			}
+			printWriter.print("\n");
+			while(rs.next()){
+				for(int i=0;i<numColumns;i++){
+					printWriter.print(rs.getString(i+1)+",");
+				}
+				printWriter.print("\n");
+				printWriter.flush();
+			}
+			printWriter.close();
+		}
+		catch(Exception e){e.printStackTrace();}
+	}
+	
+	private void writeToFileAvgRating(ResultSet rs){
+		try{
+			System.out.println("In writeToFile");
+			FileWriter outputFile = new FileWriter("avgRating.csv");
+			PrintWriter printWriter = new PrintWriter(outputFile);
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int numColumns = rsmd.getColumnCount();
+
+			for(int i=0;i<numColumns;i++){
+				printWriter.print(rsmd.getColumnLabel(i+1)+",");
+			}
+			printWriter.print("\n");
+			while(rs.next()){
+				for(int i=0;i<numColumns;i++){
+					printWriter.print(rs.getString(i+1)+",");
+				}
+				printWriter.print("\n");
+				printWriter.flush();
+			}
+			printWriter.close();
+		}
+		catch(Exception e){e.printStackTrace();}
+	}
+	
+	private void writeToFileWatched(ResultSet rs){
+		try{
+			System.out.println("In writeToFile");
+			FileWriter outputFile = new FileWriter("watched.csv");
+			PrintWriter printWriter = new PrintWriter(outputFile);
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int numColumns = rsmd.getColumnCount();
+
+			for(int i=0;i<numColumns;i++){
+				printWriter.print(rsmd.getColumnLabel(i+1)+",");
+			}
+			printWriter.print("\n");
+			while(rs.next()){
+				for(int i=0;i<numColumns;i++){
+					printWriter.print(rs.getString(i+1)+",");
+				}
+				printWriter.print("\n");
+				printWriter.flush();
+			}
+			printWriter.close();
+		}
+		catch(Exception e){e.printStackTrace();}
+	}
+	
+	private void writeToFileUnwatched(ResultSet rs){
+		try{
+			System.out.println("In writeToFile");
+			FileWriter outputFile = new FileWriter("unwatched.csv");
+			PrintWriter printWriter = new PrintWriter(outputFile);
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int numColumns = rsmd.getColumnCount();
+
+			for(int i=0;i<numColumns;i++){
+				printWriter.print(rsmd.getColumnLabel(i+1)+",");
+			}
+			printWriter.print("\n");
+			while(rs.next()){
+				for(int i=0;i<numColumns;i++){
+					printWriter.print(rs.getString(i+1)+",");
+				}
+				printWriter.print("\n");
+				printWriter.flush();
+			}
+			printWriter.close();
+		}
+		catch(Exception e){e.printStackTrace();}
+	}
+
 }
